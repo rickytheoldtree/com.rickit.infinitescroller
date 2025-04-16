@@ -1,0 +1,14 @@
+{
+  "name": "com.rickit.infinitescroller",
+  "displayName": "RicKit Infinite Scroller",
+  "author": {
+    "name": "LYQ"
+  },
+  "version": "1.0.0",
+  "unity": "2020.3",
+  "description": "Unity Infinite Scroller",
+  "repository": {
+    "url": "https://github.com/rickytheoldtree/com.rickit.infinitescroller.git",
+    "type": "git"
+  }
+}
