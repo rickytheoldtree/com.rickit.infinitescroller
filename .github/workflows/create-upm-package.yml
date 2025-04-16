@@ -30,7 +30,7 @@ jobs:
           echo "Derived tag name: $tag_name"
 
           # Perform subtree split
-          git subtree split --prefix=Assets/RicKit/EnhancedScroller --branch upm
+          git subtree split --prefix=Assets/RicKit/InfiniteScroller --branch upm
           echo "Subtree split completed. Branch 'upm' created."
 
           # Create and push the tag
