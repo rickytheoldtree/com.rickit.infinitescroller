@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace RicKit.InfiniteScroller
 {
-    public delegate void CellViewVisibilityChangedDelegate(InfiniteScrollerCellView cellView);
+    public delegate void CellViewVisibilityChangedDelegate(IInfiniteScrollerCellView cellView);
 
-    public delegate void CellViewWillRecycleDelegate(InfiniteScrollerCellView cellView);
+    public delegate void CellViewWillRecycleDelegate(IInfiniteScrollerCellView cellView);
 
     public delegate void ScrollerScrolledDelegate(InfiniteScroller scroller, Vector2 val, float scrollPosition);
 
@@ -17,9 +18,9 @@ namespace RicKit.InfiniteScroller
 
     public delegate void ScrollerTweeningChangedDelegate(InfiniteScroller scroller, bool tweening);
 
-    public delegate void CellViewInstantiated(InfiniteScroller scroller, InfiniteScrollerCellView cellView);
+    public delegate void CellViewInstantiated(InfiniteScroller scroller, IInfiniteScrollerCellView cellView);
 
-    public delegate void CellViewReused(InfiniteScroller scroller, InfiniteScrollerCellView cellView);
+    public delegate void CellViewReused(InfiniteScroller scroller, IInfiniteScrollerCellView cellView);
 
     public delegate float CustomTweenFunction(float start, float end, float remainingTimePercentage);
 
@@ -244,23 +245,29 @@ namespace RicKit.InfiniteScroller
 
         public RectTransform Container => container;
 
-        public InfiniteScrollerCellView GetCellView(InfiniteScrollerCellView cellPrefab)
+        public IInfiniteScrollerCellView GetCellView(IInfiniteScrollerCellView cellPrefab)
         {
             // see if there is a view to recycle
             var cellView = GetRecycledCellView(cellPrefab);
-            if (!cellView)
+            if (cellView == null)
             {
-                var go = Instantiate(cellPrefab.gameObject);
-                cellView = go.GetComponent<InfiniteScrollerCellView>();
-                cellView.transform.SetParent(container);
-                cellView.transform.localPosition = Vector3.zero;
-                cellView.transform.localRotation = Quaternion.identity;
+                var go = Instantiate(cellPrefab.GameObject);
+                cellView = go.GetComponents<MonoBehaviour>().OfType<IInfiniteScrollerCellView>()
+                    .FirstOrDefault();
+                if (cellView == null)
+                {
+                    Debug.LogError("The cell prefab must implement IInfiniteScrollerCellView interface.");
+                    return null;
+                }
+                cellView.GameObject.transform.SetParent(container);
+                cellView.GameObject.transform.localPosition = Vector3.zero;
+                cellView.GameObject.transform.localRotation = Quaternion.identity;
 
                 CellViewInstantiated?.Invoke(this, cellView);
             }
             else
             {
-                cellView.gameObject.SetActive(true);
+                cellView.GameObject.SetActive(true);
 
                 CellViewReused?.Invoke(this, cellView);
             }
@@ -314,7 +321,7 @@ namespace RicKit.InfiniteScroller
         {
             foreach (var c in activeCellViews)
             {
-                DestroyImmediate(c.gameObject);
+                DestroyImmediate(c.GameObject);
             }
 
             activeCellViews.Clear();
@@ -324,7 +331,7 @@ namespace RicKit.InfiniteScroller
         {
             foreach (var c in recycledCellViews)
             {
-                DestroyImmediate(c.gameObject);
+                DestroyImmediate(c.GameObject);
             }
 
             recycledCellViews.Clear();
@@ -553,11 +560,11 @@ namespace RicKit.InfiniteScroller
             return _GetCellIndexAtPosition(position, 0, cellViewOffsetArray.Count - 1);
         }
 
-        public InfiniteScrollerCellView GetCellViewAtDataIndex(int dataIndex)
+        public IInfiniteScrollerCellView GetCellViewAtDataIndex(int dataIndex)
         {
             foreach (var c in activeCellViews)
             {
-                if (c.dataIndex == dataIndex)
+                if (c.DataIndex == dataIndex)
                 {
                     return c;
                 }
@@ -613,7 +620,7 @@ namespace RicKit.InfiniteScroller
 
         private bool refreshActive;
 
-        private readonly List<InfiniteScrollerCellView> recycledCellViews = new List<InfiniteScrollerCellView>();
+        private readonly List<IInfiniteScrollerCellView> recycledCellViews = new List<IInfiniteScrollerCellView>();
 
         private LayoutElement firstPadding;
 
@@ -627,7 +634,7 @@ namespace RicKit.InfiniteScroller
 
         public float scrollPosition;
 
-        private readonly List<InfiniteScrollerCellView> activeCellViews = new List<InfiniteScrollerCellView>();
+        private readonly List<IInfiniteScrollerCellView> activeCellViews = new List<IInfiniteScrollerCellView>();
 
         private int activeCellViewsStartIndex;
 
@@ -775,11 +782,11 @@ namespace RicKit.InfiniteScroller
             }
         }
 
-        private InfiniteScrollerCellView GetRecycledCellView(InfiniteScrollerCellView cellPrefab)
+        private IInfiniteScrollerCellView GetRecycledCellView(IInfiniteScrollerCellView cellPrefab)
         {
             for (var i = 0; i < recycledCellViews.Count; i++)
             {
-                if (recycledCellViews[i].cellIdentifier == cellPrefab.cellIdentifier)
+                if (recycledCellViews[i].CellIdentifier == cellPrefab.CellIdentifier)
                 {
                     var cellView = recycledCellViews[i];
                     recycledCellViews.RemoveAt(i);
@@ -798,13 +805,13 @@ namespace RicKit.InfiniteScroller
             var remainingCellIndices = new List<int>();
             while (i < activeCellViews.Count)
             {
-                if (activeCellViews[i].cellIndex < startIndex || activeCellViews[i].cellIndex > endIndex)
+                if (activeCellViews[i].CellIndex < startIndex || activeCellViews[i].CellIndex > endIndex)
                 {
                     RecycleCell(activeCellViews[i]);
                 }
                 else
                 {
-                    remainingCellIndices.Add(activeCellViews[i].cellIndex);
+                    remainingCellIndices.Add(activeCellViews[i].CellIndex);
                     i++;
                 }
             }
@@ -848,7 +855,7 @@ namespace RicKit.InfiniteScroller
             activeCellViewsEndIndex = 0;
         }
 
-        private void RecycleCell(InfiniteScrollerCellView cellView)
+        private void RecycleCell(IInfiniteScrollerCellView cellView)
         {
             CellViewWillRecycle?.Invoke(cellView);
 
@@ -856,11 +863,11 @@ namespace RicKit.InfiniteScroller
 
             recycledCellViews.Add(cellView);
 
-            cellView.transform.gameObject.SetActive(false);
+            cellView.GameObject.SetActive(false);
 
-            cellView.dataIndex = 0;
-            cellView.cellIndex = 0;
-            cellView.active = false;
+            cellView.DataIndex = 0;
+            cellView.CellIndex = 0;
+            cellView.Active = false;
 
             CellViewVisibilityChanged?.Invoke(cellView);
         }
@@ -872,15 +879,15 @@ namespace RicKit.InfiniteScroller
             var dataIndex = cellIndex % NumberOfCells;
             var cellView = mDelegate.GetCellView(this, dataIndex, cellIndex);
 
-            cellView.cellIndex = cellIndex;
-            cellView.dataIndex = dataIndex;
-            cellView.active = true;
+            cellView.CellIndex = cellIndex;
+            cellView.DataIndex = dataIndex;
+            cellView.Active = true;
 
-            cellView.transform.SetParent(container, false);
-            cellView.transform.localScale = Vector3.one;
+            cellView.GameObject.transform.SetParent(container, false);
+            cellView.GameObject.transform.localScale = Vector3.one;
 
-            var layoutElement = cellView.GetComponent<LayoutElement>();
-            if (!layoutElement) layoutElement = cellView.gameObject.AddComponent<LayoutElement>();
+            var layoutElement = cellView.GameObject.GetComponent<LayoutElement>();
+            if (!layoutElement) layoutElement = cellView.GameObject.AddComponent<LayoutElement>();
 
             if (scrollDirection == ScrollDirectionEnum.Vertical)
                 layoutElement.minHeight = cellViewSizeArray[cellIndex] - (cellIndex > 0 ? layoutGroup.spacing : 0);
@@ -893,9 +900,9 @@ namespace RicKit.InfiniteScroller
                 activeCellViews.Add(cellView);
 
             if (listPosition == ListPositionEnum.Last)
-                cellView.transform.SetSiblingIndex(container.childCount - 2);
+                cellView.GameObject.transform.SetSiblingIndex(container.childCount - 2);
             else if (listPosition == ListPositionEnum.First)
-                cellView.transform.SetSiblingIndex(1);
+                cellView.GameObject.transform.SetSiblingIndex(1);
 
             CellViewVisibilityChanged?.Invoke(cellView);
         }

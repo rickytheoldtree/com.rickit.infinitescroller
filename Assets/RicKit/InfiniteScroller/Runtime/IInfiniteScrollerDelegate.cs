@@ -6,6 +6,6 @@
         
         float GetCellViewSize(InfiniteScroller scroller, int dataIndex);
         
-        InfiniteScrollerCellView GetCellView(InfiniteScroller scroller, int dataIndex, int cellIndex);
+        IInfiniteScrollerCellView GetCellView(InfiniteScroller scroller, int dataIndex, int cellIndex);
     }
 }

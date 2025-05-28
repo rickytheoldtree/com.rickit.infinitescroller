@@ -1,21 +1,26 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace RicKit.InfiniteScroller
 {
-    public class InfiniteScrollerCellView : MonoBehaviour
+    public class InfiniteScrollerCellView : MonoBehaviour, IInfiniteScrollerCellView
     {
         public string cellIdentifier;
-        
-        [NonSerialized]
-        public int cellIndex;
-        
-        [NonSerialized]
-        public int dataIndex;
-        
-        [NonSerialized]
-        public bool active;
+        public string CellIdentifier => cellIdentifier;
+        public int CellIndex { get; set; }
+        public int DataIndex { get; set; }
+        public bool Active { get; set; }
+        public GameObject GameObject => gameObject;
+    }
 
-        public virtual void RefreshCellView() { }
+    public interface IInfiniteScrollerCellView
+    {
+        public string CellIdentifier { get; }
+        public int CellIndex { get; set; }
+        public int DataIndex { get; set; }
+        public bool Active { get; set; }
+        public GameObject GameObject { get; }
+        public virtual void RefreshCellView()
+        {
+        }
     }
 }

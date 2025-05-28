@@ -10,7 +10,7 @@ namespace RicKit.InfiniteScroller
         private InfiniteScroller scroller;
         public InfiniteScroller.TweenType snapTweenType;
         public float snapTweenTime;
-        public event Action<InfiniteScrollerCellView> OnSnapComplete;
+        public event Action<IInfiniteScrollerCellView> OnSnapComplete;
         private bool isDragging;
 
         private Vector2 dragStartPosition = Vector2.zero;
@@ -32,18 +32,18 @@ namespace RicKit.InfiniteScroller
 
             dragStartPosition = data.position;
 
-            var cellViews = scroller.GetComponentsInChildren<InfiniteScrollerCellView>();
+            var cellViews = scroller.GetComponentsInChildren<IInfiniteScrollerCellView>();
 
             var minDistance = float.MaxValue;
             foreach (var cellView in cellViews)
             {
-                if (!cellView.active) continue;
+                if (!cellView.Active) continue;
 
-                var distance = Vector3.Distance(cellView.transform.position, scroller.transform.position);
+                var distance = Vector3.Distance(cellView.GameObject.transform.position, scroller.transform.position);
 
                 if (distance > minDistance) continue;
                 minDistance = distance;
-                currentIndex = cellView.dataIndex;
+                currentIndex = cellView.DataIndex;
             }
         }
 
@@ -66,14 +66,14 @@ namespace RicKit.InfiniteScroller
             };
             
             var maxIndex = scroller.Delegate.GetNumberOfCells(scroller) - 1;
-            if (jumpToIndex > maxIndex || jumpToIndex < 0) return;
             jumpToIndex = Mathf.Clamp(jumpToIndex, 0, maxIndex);
+            if (jumpToIndex == currentIndex) return;
             scroller.JumpToDataIndex(jumpToIndex, tweenType: snapTweenType, tweenTime: snapTweenTime,
                 jumpComplete:
                 () =>
                 {
                     var cellView = scroller.GetCellViewAtDataIndex(jumpToIndex);
-                    if (cellView) OnSnapComplete?.Invoke(cellView);
+                    if (cellView != null) OnSnapComplete?.Invoke(cellView);
                 });
         }
     }
