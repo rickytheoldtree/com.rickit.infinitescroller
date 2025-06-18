@@ -67,7 +67,12 @@ namespace RicKit.InfiniteScroller
             
             var maxIndex = scroller.Delegate.GetNumberOfCells(scroller) - 1;
             jumpToIndex = Mathf.Clamp(jumpToIndex, 0, maxIndex);
-            if (jumpToIndex == currentIndex) return;
+            if (jumpToIndex == currentIndex)
+            {
+                var cellView = scroller.GetCellViewAtDataIndex(jumpToIndex);
+                if (cellView != null) OnSnapComplete?.Invoke(cellView);
+                return;
+            }
             scroller.JumpToDataIndex(jumpToIndex, tweenType: snapTweenType, tweenTime: snapTweenTime,
                 jumpComplete:
                 () =>
