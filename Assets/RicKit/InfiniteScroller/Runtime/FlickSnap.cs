@@ -67,7 +67,11 @@ namespace RicKit.InfiniteScroller
             
             var maxIndex = scroller.Delegate.GetNumberOfCells(scroller) - 1;
             jumpToIndex = Mathf.Clamp(jumpToIndex, 0, maxIndex);
-            if (jumpToIndex == currentIndex)
+            var isElastic = scroller.ScrollRect.normalizedPosition.y < 0f ||
+                            scroller.ScrollRect.normalizedPosition.y > 1f ||
+                            scroller.ScrollRect.normalizedPosition.x < 0f ||
+                            scroller.ScrollRect.normalizedPosition.x > 1f;
+            if (jumpToIndex == currentIndex && isElastic)
             {
                 var cellView = scroller.GetCellViewAtDataIndex(jumpToIndex);
                 if (cellView != null) OnSnapComplete?.Invoke(cellView);

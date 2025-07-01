@@ -1,4 +1,6 @@
 # Changelog
+## [1.0.4] - 2025-07-01
+- enhance jumpToIndex condition for elastic scrolling
 ## [1.0.3] - 2025-06-18
 - Enhance snap behavior by invoking OnSnapComplete for the current index
 ## [1.0.2] - 2025-05-28
