@@ -245,16 +245,15 @@ namespace RicKit.InfiniteScroller
 
         public RectTransform Container => container;
 
-        public IInfiniteScrollerCellView GetCellView(IInfiniteScrollerCellView cellPrefab)
+        public T GetCellView<T>(T cellPrefab) where T : MonoBehaviour, IInfiniteScrollerCellView
         {
             // see if there is a view to recycle
             var cellView = GetRecycledCellView(cellPrefab);
-            if (cellView == null)
+            if (!cellView)
             {
                 var go = Instantiate(cellPrefab.GameObject);
-                cellView = go.GetComponents<MonoBehaviour>().OfType<IInfiniteScrollerCellView>()
-                    .FirstOrDefault();
-                if (cellView == null)
+                cellView = go.GetComponent<T>();
+                if (!cellView)
                 {
                     Debug.LogError("The cell prefab must implement IInfiniteScrollerCellView interface.");
                     return null;
@@ -782,18 +781,16 @@ namespace RicKit.InfiniteScroller
             }
         }
 
-        private IInfiniteScrollerCellView GetRecycledCellView(IInfiniteScrollerCellView cellPrefab)
+        private T GetRecycledCellView<T>(T cellPrefab) where T : MonoBehaviour, IInfiniteScrollerCellView
         {
             for (var i = 0; i < recycledCellViews.Count; i++)
             {
-                if (recycledCellViews[i].CellIdentifier == cellPrefab.CellIdentifier)
-                {
-                    var cellView = recycledCellViews[i];
-                    recycledCellViews.RemoveAt(i);
-                    return cellView;
-                }
+                if (recycledCellViews[i].CellIdentifier != cellPrefab.CellIdentifier) continue;
+                var cellView = recycledCellViews[i];
+                recycledCellViews.RemoveAt(i);
+                if (cellView is T view) return view;
+                Debug.LogError("Please use cellIdentifier to distinguish different cell view types.");
             }
-
             return null;
         }
 
